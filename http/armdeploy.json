@@ -127,7 +127,7 @@
                 "name": "http-rule",
                 "http": {
                   "metadata": {
-                    "concurrentRequests": "20"
+                    "concurrentRequests": "100"
                   }
                 }
               }
