@@ -1,0 +1,6 @@
+spring:
+    jms:
+        servicebus:
+            connection-string: ${AZURE_SERVICE_BUS_CONNECTION_STRING}
+            idle-timeout: 60000
+            pricing-tier: premium
