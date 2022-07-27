@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from "express";
 import { homeController } from "./controllers/homeController.js";
 import { createBlobController } from "./controllers/createBlobController.js";
