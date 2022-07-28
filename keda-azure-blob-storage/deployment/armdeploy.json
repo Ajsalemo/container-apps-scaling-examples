@@ -107,11 +107,13 @@
           },
           "secrets": [
             {
-
               "name": "azurecontainerregistrypasswordref",
               "value": "[parameters('azureContainerRegistryPassword')]"
             },
             {
+              // NOTE: When exporting this variable (eg., export AZURE_STORAGE_CONNECTION_STRING=...), export it within quotes
+              // Example: export AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=someaccount;AccountKey=12345abc...."
+              // Or else scaling may NOT work and replicas will only remain at one - this will silently fail, due to the special characters in storage connection strings and the way this is parsed
               "name": "azurestorageconnectionstringref",
               "value": "[parameters('azureStorageConnectionString')]"
             }
@@ -155,9 +157,8 @@
                   "type": "azure-blob",
                   "metadata": {
                     "blobContainerName": "[parameters('azureStorageContainerName')]",
-                    "blobCount": "10",
-                    "accountName": "[parameters('azureStorageAccountName')]",
-                    "globPattern": "glob-pattern"
+                    "blobCount": "5",
+                    "accountName": "[parameters('azureStorageAccountName')]"
                   },
                   "auth": [
                     {
@@ -170,6 +171,36 @@
             ]
           }
         }
+      }
+    },
+    // During creation we assign the Managed Identity permission to execute operations against the Storage Account with the Storage Blob Data Contributor and Storage Queue Data Contributor role
+    // Or else we'll get a "AuthorizationPermissionMismatch" error
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[guid(concat(resourceGroup().id, 'storage-blob-data-contributor'))]",
+      "scope": "[concat('Microsoft.Storage/storageAccounts', '/', parameters('azureStorageAccountName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.App/containerApps/', 'containerappsscalingblobstorage')]"
+      ],
+      "properties": {
+        "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+        "principalId": "[reference(concat('Microsoft.App/containerApps/', 'containerappsscalingblobstorage'), '2022-03-01','Full').identity.principalId]",
+        "principalType": "ServicePrincipal"
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      "name": "[guid(concat(resourceGroup().id, 'storage-queue-data-contributor'))]",
+      "scope": "[concat('Microsoft.Storage/storageAccounts', '/', parameters('azureStorageAccountName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.App/containerApps/', 'containerappsscalingblobstorage')]"
+      ],
+      "properties": {
+        "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/974c5e8b-45b9-4653-ba55-5f855dd0fb88",
+        "principalId": "[reference(concat('Microsoft.App/containerApps/', 'containerappsscalingblobstorage'), '2022-03-01','Full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       }
     }
   ]

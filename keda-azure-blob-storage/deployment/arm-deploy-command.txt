@@ -10,5 +10,6 @@ az deployment group create \
       azureContainerRegistryImageName="$AZURE_CONTAINER_REGISTRY_IMAGE_NAME" \
       azureContainerRegistryImageTag="$AZURE_CONTAINER_REGISTRY_IMAGE_TAG" \
       azureStorageAccountName="$AZURE_STORAGE_ACCOUNT_NAME" \
-      azureStorageContainerName="$AZURE_STORAGE_CONTAINER_NAME"
+      azureStorageContainerName="$AZURE_STORAGE_CONTAINER_NAME" \
+      azureStorageConnectionString="$AZURE_STORAGE_CONNECTION_STRING"
 
