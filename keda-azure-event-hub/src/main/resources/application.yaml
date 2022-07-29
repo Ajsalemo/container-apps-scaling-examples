@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    azure:
+      eventhubs:
+        connection-string: ${AZURE_EVENT_HUB_CONNECTION_STRING}
+      storage:
+        connection-string: ${AZURE_STORAGE_CONNECTION_STRING}
+        container-name: ${AZURE_STORAGE_CONTAINER_NAME}
