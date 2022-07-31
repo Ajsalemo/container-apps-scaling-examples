@@ -111,6 +111,9 @@
               "value": "[parameters('azureContainerRegistryPassword')]"
             },
             {
+              // NOTE: When exporting this variable (eg., export AZURE_STORAGE_CONNECTION_STRING=...), export it within quotes
+              // Example: export AZURE_STORAGE_CONNECTION_STRING="DefaultEndpointsProtocol=https;AccountName=someaccount;AccountKey=12345abc...."
+              // Or else scaling may NOT work and replicas will only remain at one - this will silently fail, due to the special characters in storage connection strings and the way this is parsed
               "name": "azurestorageconnectionstringref",
               "value": "[parameters('azureStorageConnectionString')]"
             }
