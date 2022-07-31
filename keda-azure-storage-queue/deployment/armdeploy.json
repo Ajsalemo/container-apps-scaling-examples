@@ -24,14 +24,14 @@
     "azureContainerRegistryImageTag": {
       "type": "string"
     },
-    "azureEventHubConnectionString": {
+    "azureStorageAccountName": {
       "type": "securestring"
+    },
+    "azureStorageQueueName": {
+      "type": "string"
     },
     "azureStorageConnectionString": {
       "type": "securestring"
-    },
-    "azureStorageContainerName": {
-      "type": "string"
     }
   },
   "variables": {
@@ -90,27 +90,25 @@
     {
       "type": "Microsoft.App/containerApps",
       "apiVersion": "2022-03-01",
-      "name": "containerappsscalingeventhub",
+      "name": "containerappsscalingstoragequeue",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.App/managedEnvironments/', parameters('environment_name'))]"
       ],
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "properties": {
         "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments/', parameters('environment_name'))]",
         "configuration": {
           "ingress": {
             "external": true,
-            "targetPort": 8080
+            "targetPort": 8000
           },
           "secrets": [
             {
-
               "name": "azurecontainerregistrypasswordref",
               "value": "[parameters('azureContainerRegistryPassword')]"
-            },
-            {
-              "name": "azureeventhubconnectionstringref",
-              "value": "[parameters('azureEventHubConnectionString')]"
             },
             {
               "name": "azurestorageconnectionstringref",
@@ -129,23 +127,19 @@
           "containers": [
             {
               "image": "[concat(parameters('azureContainerRegistryServerUrl'), '/', parameters('azureContainerRegistryImageName'), ':', parameters('azureContainerRegistryImageTag'))]",
-              "name": "containerappsscalingeventhub",
+              "name": "containerappsscalingstorageblob",
               "resources": {
                 "cpu": 0.5,
                 "memory": "1.0Gi"
               },
               "env": [
                 {
-                  "name": "AZURE_EVENT_HUB_CONNECTION_STRING",
-                  "secretRef": "azureeventhubconnectionstringref"
+                  "name": "AZURE_STORAGE_ACCOUNT_NAME",
+                  "value": "[parameters('azureStorageAccountName')]"
                 },
                 {
-                  "name": "AZURE_STORAGE_CONNECTION_STRING",
-                  "secretRef": "azurestorageconnectionstringref"
-                },
-                {
-                  "name": "AZURE_STORAGE_CONTAINER_NAME",
-                  "value": "[parameters('azureStorageContainerName')]"
+                  "name": "AZURE_STORAGE_QUEUE_NAME",
+                  "value": "[parameters('azureStorageQueueName')]"
                 }
               ]
             }
@@ -155,18 +149,17 @@
             "maxReplicas": 5,
             "rules": [
               {
-                "name": "eventhub-based-autoscaling",
+                "name": "storage-queue-autoscaling",
                 "custom": {
-                  "type": "azure-eventhub",
+                  "type": "azure-queue",
                   "metadata": {
-                    "consumerGroup": "$Default",
-                    "unprocessedEventThreshold": "5",
-                    "storageConnectionFromEnv": "[parameters('azureStorageConnectionString')]",
-                    "blobContainer": "[parameters('azureStorageContainerName')]"
+                    "queueName": "[parameters('azureStorageQueueName')]",
+                    "queueLength": "5",
+                    "accountName": "[parameters('azureStorageAccountName')]"
                   },
                   "auth": [
                     {
-                      "secretRef": "azureeventhubconnectionstringref",
+                      "secretRef": "azurestorageconnectionstringref",
                       "triggerParameter": "connection"
                     }
                   ]
@@ -175,6 +168,22 @@
             ]
           }
         }
+      }
+    },
+    // https://docs.microsoft.com/en-us/azure/storage/blobs/assign-azure-role-data-access?tabs=portal
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2018-09-01-preview",
+      // 'name' should be unique
+      "name": "[guid(concat(resourceGroup().id, 'storage-queue-data-contributor', resourceGroup().name))]",
+      "scope": "[concat('Microsoft.Storage/storageAccounts', '/', parameters('azureStorageAccountName'))]",
+      "dependsOn": [
+        "[concat('Microsoft.App/containerApps/', 'containerappsscalingstoragequeue')]"
+      ],
+      "properties": {
+        "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/974c5e8b-45b9-4653-ba55-5f855dd0fb88",
+        "principalId": "[reference(concat('Microsoft.App/containerApps/', 'containerappsscalingstoragequeue'), '2022-03-01','Full').identity.principalId]",
+        "principalType": "ServicePrincipal"
       }
     }
   ]
