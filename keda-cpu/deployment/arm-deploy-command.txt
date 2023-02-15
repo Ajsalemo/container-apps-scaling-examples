@@ -8,7 +8,8 @@ az deployment group create \
       azureContainerRegistryPassword="$AZURE_CONTAINER_REGISTRY_PASSWORD" \
       azureContainerRegistryUsername="$AZURE_CONTAINER_REGISTRY_USERNAME" \
       azureContainerRegistryImageName="$AZURE_CONTAINER_REGISTRY_IMAGE_NAME" \
-      azureContainerRegistryImageTag="$AZURE_CONTAINER_REGISTRY_IMAGE_TAG" 
+      azureContainerRegistryImageTag="$AZURE_CONTAINER_REGISTRY_IMAGE_TAG" \
+      testSecret="$TEST_SECRET"
 
 
 

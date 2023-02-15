@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class HomeController {
-    String message = "container-apps-scaling-examples-keda-service-bus";
+    String message = "container-apps-scaling-examples-keda-cpu";
 
     @GetMapping("/")
     public String index() {
